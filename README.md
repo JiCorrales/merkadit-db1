@@ -42,4 +42,10 @@ La especificación oficial del **Caso #1 – Merkadit** se encuentra en el sigui
 
 👉 [Ver especificación en GitHub](https://github.com/vsurak/cursostec/blob/abbee4d51385a925771acdd6c8ac0b2c17e498b5/bases%20I/Caso%20%231.md)
 
+---
 
+📚 Disponible en otros idiomas:  
+- [English](./README.en.md)  
+- [Deutsch](./README.de.md) 
+
+---
