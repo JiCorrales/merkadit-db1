@@ -35,3 +35,11 @@ Este sistema busca optimizar la administración de mercados gastronómicos y min
 - **Postman** (para pruebas de la API)  
 
 ---
+
+## 📄 Especificación del Proyecto (Permalink)
+
+La especificación oficial del **Caso #1 – Merkadit** se encuentra en el siguiente permalink:  
+
+👉 [Ver especificación en GitHub](https://github.com/vsurak/cursostec/blob/abbee4d51385a925771acdd6c8ac0b2c17e498b5/bases%20I/Caso%20%231.md)
+
+
