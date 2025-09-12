@@ -24,7 +24,7 @@ Este sistema busca optimizar la administración de mercados gastronómicos y min
   - Procedimientos almacenados (`registerSale`, `settleCommerce`).
   - Creación de vistas para reportes.
 - **/api** → Código fuente de la API REST (arquitectura en 4 capas).  
-- **/postman** → Colección de pruebas de Postman para validar los endpoints.  
+- **/postman_tests** → Colección de pruebas de Postman para validar los endpoints.  
 - **README.md** → Este archivo con instrucciones.  
 
 ---
