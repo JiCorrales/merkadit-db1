@@ -1,0 +1,869 @@
+-- MySQL Workbench Forward Engineering
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -----------------------------------------------------
+-- Schema Merkadit
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema Merkadit
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `Merkadit` DEFAULT CHARACTER SET utf8 ;
+USE `Merkadit` ;
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_users`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_users` (
+  `userID` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(15) NOT NULL,
+  `lastName` VARCHAR(15) NOT NULL,
+  `password` VARBINARY(160) NOT NULL,
+  `enabled` BIT NOT NULL DEFAULT 1,
+  `createdAt` DATETIME NOT NULL,
+  PRIMARY KEY (`userID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_countries`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_countries` (
+  `countryID` INT NOT NULL AUTO_INCREMENT,
+  `countryName` VARCHAR(30) NOT NULL,
+  PRIMARY KEY (`countryID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_states`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_states` (
+  `stateID` INT NOT NULL AUTO_INCREMENT,
+  `stateName` VARCHAR(30) NOT NULL,
+  `countryID` INT NOT NULL,
+  PRIMARY KEY (`stateID`),
+  INDEX `fk_mk_states_mk_countries1_idx` (`countryID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_states_mk_countries1`
+    FOREIGN KEY (`countryID`)
+    REFERENCES `Merkadit`.`mk_countries` (`countryID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_cities`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_cities` (
+  `cityID` INT NOT NULL AUTO_INCREMENT,
+  `cityName` VARCHAR(30) NOT NULL,
+  `stateID` INT NOT NULL,
+  PRIMARY KEY (`cityID`),
+  INDEX `fk_mk_cities_mk_states1_idx` (`stateID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_cities_mk_states1`
+    FOREIGN KEY (`stateID`)
+    REFERENCES `Merkadit`.`mk_states` (`stateID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_addresses`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_addresses` (
+  `addressID` INT NOT NULL AUTO_INCREMENT,
+  `address` VARCHAR(60) NOT NULL,
+  `zipCode` VARCHAR(8) NOT NULL,
+  `geoLocation` POINT NOT NULL,
+  `postTime` DATETIME NOT NULL,
+  `cityID` INT NOT NULL,
+  PRIMARY KEY (`addressID`),
+  INDEX `fk_mk_addresses_mk_cities1_idx` (`cityID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_addresses_mk_cities1`
+    FOREIGN KEY (`cityID`)
+    REFERENCES `Merkadit`.`mk_cities` (`cityID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_contactInfoType`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_contactInfoType` (
+  `contactInfoTypeID` INT NOT NULL AUTO_INCREMENT,
+  `contactType` VARCHAR(40) NOT NULL,
+  PRIMARY KEY (`contactInfoTypeID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_marketContactInfo`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_marketContactInfo` (
+  `marketContactInfoID` INT NOT NULL AUTO_INCREMENT,
+  `contact` VARCHAR(40) NOT NULL,
+  `enabled` BIT NOT NULL DEFAULT 1,
+  `lastUpdated` DATETIME NOT NULL,
+  `contactInfoTypeID` INT NOT NULL,
+  PRIMARY KEY (`marketContactInfoID`),
+  INDEX `fk_mk_marketContactInfo_mk_contactInfoType1_idx` (`contactInfoTypeID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_marketContactInfo_mk_contactInfoType1`
+    FOREIGN KEY (`contactInfoTypeID`)
+    REFERENCES `Merkadit`.`mk_contactInfoType` (`contactInfoTypeID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_markets`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_markets` (
+  `marketID` INT NOT NULL AUTO_INCREMENT,
+  `marketName` VARCHAR(20) NOT NULL,
+  `marketDescription` VARCHAR(200) NOT NULL,
+  `cedulaJuridica` VARCHAR(12) NOT NULL,
+  `type` VARCHAR(20) NOT NULL,
+  `size` INT NOT NULL,
+  `enabled` BIT NOT NULL,
+  `deleted` BIT NOT NULL,
+  `lastUpdated` DATETIME NOT NULL,
+  `legalAddressID` INT NOT NULL,
+  `marketContactInfoID` INT NOT NULL,
+  INDEX `fk_mk_markets_mk_addresses1_idx` (`legalAddressID` ASC) VISIBLE,
+  INDEX `fk_mk_markets_mk_marketContactInfo1_idx` (`marketContactInfoID` ASC) VISIBLE,
+  PRIMARY KEY (`marketID`),
+  CONSTRAINT `fk_mk_markets_mk_addresses1`
+    FOREIGN KEY (`legalAddressID`)
+    REFERENCES `Merkadit`.`mk_addresses` (`addressID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_markets_mk_marketContactInfo1`
+    FOREIGN KEY (`marketContactInfoID`)
+    REFERENCES `Merkadit`.`mk_marketContactInfo` (`marketContactInfoID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_roles`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_roles` (
+  `roleID` INT NOT NULL AUTO_INCREMENT,
+  `roleName` VARCHAR(20) NOT NULL,
+  `enabled` BIT NOT NULL DEFAULT 1,
+  PRIMARY KEY (`roleID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_userRoles`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_userRoles` (
+  `roleID` INT NOT NULL,
+  `userID` INT NOT NULL,
+  `enabled` BIT NOT NULL DEFAULT 1,
+  `postTime` DATETIME NOT NULL,
+  PRIMARY KEY (`roleID`, `userID`),
+  INDEX `fk_mk_roles_has_mk_users_mk_users1_idx` (`userID` ASC) VISIBLE,
+  INDEX `fk_mk_roles_has_mk_users_mk_roles_idx` (`roleID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_roles_has_mk_users_mk_roles`
+    FOREIGN KEY (`roleID`)
+    REFERENCES `Merkadit`.`mk_roles` (`roleID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_roles_has_mk_users_mk_users1`
+    FOREIGN KEY (`userID`)
+    REFERENCES `Merkadit`.`mk_users` (`userID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_permissions`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_permissions` (
+  `permissionID` INT NOT NULL AUTO_INCREMENT,
+  `permissionName` VARCHAR(20) NOT NULL,
+  `code` VARCHAR(5) NOT NULL,
+  `enabled` BIT NOT NULL,
+  PRIMARY KEY (`permissionID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`permissionsPerRole`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`permissionsPerRole` (
+  `permissionID` INT NOT NULL,
+  `roleID` INT NOT NULL,
+  `enabled` BIT NOT NULL DEFAULT 1,
+  `postTime` DATETIME NOT NULL,
+  PRIMARY KEY (`permissionID`, `roleID`),
+  INDEX `fk_mk_permissions_has_mk_roles_mk_roles1_idx` (`roleID` ASC) VISIBLE,
+  INDEX `fk_mk_permissions_has_mk_roles_mk_permissions1_idx` (`permissionID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_permissions_has_mk_roles_mk_permissions1`
+    FOREIGN KEY (`permissionID`)
+    REFERENCES `Merkadit`.`mk_permissions` (`permissionID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_permissions_has_mk_roles_mk_roles1`
+    FOREIGN KEY (`roleID`)
+    REFERENCES `Merkadit`.`mk_roles` (`roleID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`permissionsPerUser`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`permissionsPerUser` (
+  `permissionID` INT NOT NULL,
+  `userID` INT NOT NULL,
+  `enabled` BIT NOT NULL DEFAULT 1,
+  `postTime` DATETIME NOT NULL,
+  PRIMARY KEY (`permissionID`, `userID`),
+  INDEX `fk_mk_permissions_has_mk_users_mk_users1_idx` (`userID` ASC) VISIBLE,
+  INDEX `fk_mk_permissions_has_mk_users_mk_permissions1_idx` (`permissionID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_permissions_has_mk_users_mk_permissions1`
+    FOREIGN KEY (`permissionID`)
+    REFERENCES `Merkadit`.`mk_permissions` (`permissionID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_permissions_has_mk_users_mk_users1`
+    FOREIGN KEY (`userID`)
+    REFERENCES `Merkadit`.`mk_users` (`userID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_building`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_building` (
+  `buildingID` INT NOT NULL AUTO_INCREMENT,
+  `buildingName` VARCHAR(25) NOT NULL,
+  `addressID` INT NOT NULL,
+  PRIMARY KEY (`buildingID`),
+  INDEX `fk_mk_building_mk_addresses1_idx` (`addressID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_building_mk_addresses1`
+    FOREIGN KEY (`addressID`)
+    REFERENCES `Merkadit`.`mk_addresses` (`addressID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_userContactInfo`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_userContactInfo` (
+  `userContactInfoID` INT NOT NULL AUTO_INCREMENT,
+  `contact` VARCHAR(30) NOT NULL,
+  `enabled` BIT NOT NULL DEFAULT 1,
+  `lastUpdated` DATETIME NOT NULL,
+  `contactInfoTypeID` INT NOT NULL,
+  `userID` INT NOT NULL,
+  PRIMARY KEY (`userContactInfoID`),
+  INDEX `fk_mk_contactInfo_mk_contactInfoType1_idx` (`contactInfoTypeID` ASC) VISIBLE,
+  INDEX `fk_mk_userContactInfo_mk_users1_idx` (`userID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_contactInfo_mk_contactInfoType1`
+    FOREIGN KEY (`contactInfoTypeID`)
+    REFERENCES `Merkadit`.`mk_contactInfoType` (`contactInfoTypeID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_userContactInfo_mk_users1`
+    FOREIGN KEY (`userID`)
+    REFERENCES `Merkadit`.`mk_users` (`userID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_productType`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_productType` (
+  `productTypeID` INT NOT NULL AUTO_INCREMENT,
+  `productType` VARCHAR(20) NOT NULL,
+  `productFee` FLOAT NOT NULL,
+  PRIMARY KEY (`productTypeID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_locals`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_locals` (
+  `localID` INT NOT NULL AUTO_INCREMENT,
+  `buildingID` INT NOT NULL,
+  `localCode` VARCHAR(45) NOT NULL,
+  `localName` VARCHAR(45) NULL,
+  `area_m2` DECIMAL(10,2) NOT NULL,
+  PRIMARY KEY (`localID`),
+  INDEX `fk_mk_locals_mk_building1_idx` (`buildingID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_locals_mk_building1`
+    FOREIGN KEY (`buildingID`)
+    REFERENCES `Merkadit`.`mk_building` (`buildingID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_contracts`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_contracts` (
+  `contractID` INT NOT NULL AUTO_INCREMENT,
+  `startDate` DATETIME NOT NULL,
+  `expirationDate` DATETIME NOT NULL,
+  `rent` DECIMAL(10,2) NOT NULL,
+  `rentDueDay` DATE NOT NULL,
+  `feeOnSales` FLOAT NOT NULL,
+  `productTypeID` INT NOT NULL,
+  `localID` INT NOT NULL,
+  PRIMARY KEY (`contractID`),
+  INDEX `fk_mk_contracts_mk_productType1_idx` (`productTypeID` ASC) VISIBLE,
+  INDEX `fk_mk_contracts_mk_locals1_idx` (`localID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_contracts_mk_productType1`
+    FOREIGN KEY (`productTypeID`)
+    REFERENCES `Merkadit`.`mk_productType` (`productTypeID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_contracts_mk_locals1`
+    FOREIGN KEY (`localID`)
+    REFERENCES `Merkadit`.`mk_locals` (`localID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_kioskType`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_kioskType` (
+  `kioskTypeID` INT NOT NULL AUTO_INCREMENT,
+  `kioskType` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`kioskTypeID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_kioskStatus`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_kioskStatus` (
+  `statusID` INT NOT NULL AUTO_INCREMENT,
+  `statusName` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`statusID`),
+  UNIQUE INDEX `name_UNIQUE` (`statusName` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_kiosks`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_kiosks` (
+  `kioskID` INT NOT NULL AUTO_INCREMENT,
+  `kioskPrice` DECIMAL(10,2) NOT NULL,
+  `area_m2` DECIMAL(10,2) NOT NULL,
+  `kioskTypeID` INT NOT NULL,
+  `statusID` INT NOT NULL,
+  `localID` INT NOT NULL,
+  `marketID` INT NOT NULL,
+  PRIMARY KEY (`kioskID`),
+  INDEX `fk_mk_kiosks_mk_kioskType1_idx` (`kioskTypeID` ASC) VISIBLE,
+  INDEX `fk_mk_kiosks_mk_kioskStatus1_idx` (`statusID` ASC) VISIBLE,
+  INDEX `fk_mk_kiosks_mk_locals1_idx` (`localID` ASC) VISIBLE,
+  INDEX `fk_mk_kiosks_mk_markets1_idx` (`marketID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_kiosks_mk_kioskType1`
+    FOREIGN KEY (`kioskTypeID`)
+    REFERENCES `Merkadit`.`mk_kioskType` (`kioskTypeID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_kiosks_mk_kioskStatus1`
+    FOREIGN KEY (`statusID`)
+    REFERENCES `Merkadit`.`mk_kioskStatus` (`statusID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_kiosks_mk_locals1`
+    FOREIGN KEY (`localID`)
+    REFERENCES `Merkadit`.`mk_locals` (`localID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_kiosks_mk_markets1`
+    FOREIGN KEY (`marketID`)
+    REFERENCES `Merkadit`.`mk_markets` (`marketID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_products`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_products` (
+  `productID` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(20) NOT NULL,
+  `expirationDate` DATE NULL,
+  `expires` BIT NOT NULL DEFAULT 1,
+  `description` VARCHAR(200) NOT NULL,
+  `deleted` BIT NOT NULL DEFAULT 1,
+  `enabled` BIT NOT NULL DEFAULT 1,
+  `productTypeID` INT NOT NULL,
+  `kioskID` INT NOT NULL,
+  PRIMARY KEY (`productID`),
+  INDEX `fk_mk_products_mk_productType1_idx` (`productTypeID` ASC) VISIBLE,
+  INDEX `fk_mk_products_mk_kiosks1_idx` (`kioskID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_products_mk_productType1`
+    FOREIGN KEY (`productTypeID`)
+    REFERENCES `Merkadit`.`mk_productType` (`productTypeID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_products_mk_kiosks1`
+    FOREIGN KEY (`kioskID`)
+    REFERENCES `Merkadit`.`mk_kiosks` (`kioskID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_productPrices`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_productPrices` (
+  `productPriceID` INT NOT NULL AUTO_INCREMENT,
+  `price` DECIMAL(10,2) NOT NULL,
+  `currentPrice` BIT NOT NULL DEFAULT 1,
+  `postTime` DATETIME NOT NULL,
+  `productID` INT NOT NULL,
+  PRIMARY KEY (`productPriceID`),
+  INDEX `fk_mk_productPrices_mk_products1_idx` (`productID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_productPrices_mk_products1`
+    FOREIGN KEY (`productID`)
+    REFERENCES `Merkadit`.`mk_products` (`productID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_receipts`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_receipts` (
+  `receiptID` INT NOT NULL AUTO_INCREMENT,
+  `postTime` DATETIME NOT NULL,
+  `total` DECIMAL(10,2) NOT NULL,
+  `receiptNumber` INT NOT NULL,
+  `client` VARCHAR(20) NOT NULL,
+  `computer` VARCHAR(10) NOT NULL,
+  `checksum` VARBINARY(250) NOT NULL,
+  `discount` DECIMAL(10,2) NULL,
+  `taxApplied` BIT NOT NULL DEFAULT 1,
+  `taxAmount` DECIMAL(10,2) NOT NULL,
+  `kioskID` INT NOT NULL,
+  PRIMARY KEY (`receiptID`),
+  INDEX `fk_mk_bills_mk_kiosks1_idx` (`kioskID` ASC) VISIBLE,
+  UNIQUE INDEX `receiptNumber_UNIQUE` (`receiptNumber` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_bills_mk_kiosks1`
+    FOREIGN KEY (`kioskID`)
+    REFERENCES `Merkadit`.`mk_kiosks` (`kioskID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_receiptDetails`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_receiptDetails` (
+  `receiptDetailID` INT NOT NULL AUTO_INCREMENT,
+  `productAmount` INT NOT NULL,
+  `subTotal` DECIMAL(10,2) NOT NULL,
+  `checksum` VARBINARY(250) NOT NULL,
+  `receiptID` INT NOT NULL,
+  `productPriceID` INT NOT NULL,
+  PRIMARY KEY (`receiptDetailID`),
+  INDEX `fk_mk_receiptDetails_mk_receipts1_idx` (`receiptID` ASC) VISIBLE,
+  INDEX `fk_mk_receiptDetails_mk_productPrices1_idx` (`productPriceID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_receiptDetails_mk_receipts1`
+    FOREIGN KEY (`receiptID`)
+    REFERENCES `Merkadit`.`mk_receipts` (`receiptID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_receiptDetails_mk_productPrices1`
+    FOREIGN KEY (`productPriceID`)
+    REFERENCES `Merkadit`.`mk_productPrices` (`productPriceID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_expenseCategories`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_expenseCategories` (
+  `expenseCategoryID` TINYINT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(45) NOT NULL,
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE,
+  PRIMARY KEY (`expenseCategoryID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_inventory`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_inventory` (
+  `inventoryID` BIGINT NOT NULL AUTO_INCREMENT,
+  `productID` INT NOT NULL,
+  `kioskID` INT NOT NULL,
+  `localID` INT NOT NULL,
+  `qty_on_hand` INT NOT NULL DEFAULT 0,
+  `min_stock` INT NOT NULL DEFAULT 0,
+  `updatedAt` DATETIME NULL,
+  PRIMARY KEY (`inventoryID`),
+  INDEX `fk_inv_product _idx` (`productID` ASC) VISIBLE,
+  INDEX `fk_inv_kiosk   _idx` (`kioskID` ASC) VISIBLE,
+  INDEX `fk_mk_inventory_mk_locals1_idx` (`localID` ASC) VISIBLE,
+  CONSTRAINT `fk_inv_product `
+    FOREIGN KEY (`productID`)
+    REFERENCES `Merkadit`.`mk_products` (`productID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_inv_kiosk   `
+    FOREIGN KEY (`kioskID`)
+    REFERENCES `Merkadit`.`mk_kiosks` (`kioskID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_inventory_mk_locals1`
+    FOREIGN KEY (`localID`)
+    REFERENCES `Merkadit`.`mk_locals` (`localID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_logLevels`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_logLevels` (
+  `logLevelID` INT NOT NULL AUTO_INCREMENT,
+  `logLevelName` VARCHAR(40) NOT NULL,
+  PRIMARY KEY (`logLevelID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_logServices`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_logServices` (
+  `logServiceID` INT NOT NULL AUTO_INCREMENT,
+  `logServiceName` VARCHAR(40) NOT NULL,
+  PRIMARY KEY (`logServiceID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_logTypes`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_logTypes` (
+  `logTypeID` INT NOT NULL AUTO_INCREMENT,
+  `logTypeName` VARCHAR(40) NOT NULL,
+  PRIMARY KEY (`logTypeID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_logs`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_logs` (
+  `logID` BIGINT NOT NULL AUTO_INCREMENT,
+  `postTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `description` VARCHAR(1000) NOT NULL,
+  `refID` BIGINT NULL,
+  `value` VARCHAR(1000) NULL,
+  `checksum` VARCHAR(125) NOT NULL,
+  `computer` VARCHAR(120) NOT NULL,
+  `logTypeID` INT NOT NULL,
+  `logServiceID` INT NOT NULL,
+  `logLevelID` INT NOT NULL,
+  `oldRow` JSON NULL,
+  `newRow` JSON NULL,
+  `actionType` VARCHAR(20) NULL,
+  PRIMARY KEY (`logID`),
+  INDEX `fk_logs_logTypes1_idx` (`logTypeID` ASC) VISIBLE,
+  INDEX `fk_logs_logServices1_idx` (`logServiceID` ASC) VISIBLE,
+  INDEX `fk_logs_logLevels1_idx` (`logLevelID` ASC) VISIBLE,
+  CONSTRAINT `fk_logs_logTypes1`
+    FOREIGN KEY (`logTypeID`)
+    REFERENCES `Merkadit`.`mk_logTypes` (`logTypeID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_logs_logServices1`
+    FOREIGN KEY (`logServiceID`)
+    REFERENCES `Merkadit`.`mk_logServices` (`logServiceID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_logs_logLevels1`
+    FOREIGN KEY (`logLevelID`)
+    REFERENCES `Merkadit`.`mk_logLevels` (`logLevelID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_tenant`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_tenant` (
+  `tenantID` INT NOT NULL AUTO_INCREMENT,
+  `tenantName` VARCHAR(30) NOT NULL,
+  `tenantLegalAddressID` INT NOT NULL,
+  `tenantLegalID` INT NOT NULL,
+  `tenantLegalName` VARCHAR(45) NOT NULL,
+  `taxID` INT NOT NULL,
+  `businessType` VARCHAR(25) NOT NULL,
+  PRIMARY KEY (`tenantID`),
+  INDEX `fk_mk_tenant_mk_addresses1_idx` (`tenantLegalAddressID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_tenant_mk_addresses1`
+    FOREIGN KEY (`tenantLegalAddressID`)
+    REFERENCES `Merkadit`.`mk_addresses` (`addressID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_tenantContactInfo`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_tenantContactInfo` (
+  `tenantContactInfoID` INT NOT NULL AUTO_INCREMENT,
+  `contact` VARCHAR(30) NOT NULL,
+  `enabled` BIT NOT NULL,
+  `lastUpdated` DATETIME NOT NULL,
+  `contactInfoTypeID` INT NOT NULL,
+  `tenantID` INT NOT NULL,
+  PRIMARY KEY (`tenantContactInfoID`),
+  INDEX `fk_mk_tenantContactInfo_mk_contactInfoType1_idx` (`contactInfoTypeID` ASC) VISIBLE,
+  INDEX `fk_mk_tenantContactInfo_mk_tenant1_idx` (`tenantID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_tenantContactInfo_mk_contactInfoType1`
+    FOREIGN KEY (`contactInfoTypeID`)
+    REFERENCES `Merkadit`.`mk_contactInfoType` (`contactInfoTypeID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_tenantContactInfo_mk_tenant1`
+    FOREIGN KEY (`tenantID`)
+    REFERENCES `Merkadit`.`mk_tenant` (`tenantID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_tenantPerContracts`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_tenantPerContracts` (
+  `tenantID` INT NOT NULL,
+  `contractID` INT NOT NULL,
+  `deleted` BIT NOT NULL DEFAULT 0,
+  `postTime` DATETIME NOT NULL,
+  PRIMARY KEY (`tenantID`, `contractID`),
+  INDEX `fk_mk_tenant_has_mk_contracts_mk_contracts1_idx` (`contractID` ASC) VISIBLE,
+  INDEX `fk_mk_tenant_has_mk_contracts_mk_tenant1_idx` (`tenantID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_tenant_has_mk_contracts_mk_tenant1`
+    FOREIGN KEY (`tenantID`)
+    REFERENCES `Merkadit`.`mk_tenant` (`tenantID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_tenant_has_mk_contracts_mk_contracts1`
+    FOREIGN KEY (`contractID`)
+    REFERENCES `Merkadit`.`mk_contracts` (`contractID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_floors`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_floors` (
+  `floorID` INT NOT NULL AUTO_INCREMENT,
+  `buildingID` INT NOT NULL,
+  `floorName` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`floorID`),
+  INDEX `fk_mk_floors_mk_building1_idx` (`buildingID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_floors_mk_building1`
+    FOREIGN KEY (`buildingID`)
+    REFERENCES `Merkadit`.`mk_building` (`buildingID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_localStatus`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_localStatus` (
+  `statusID` INT NOT NULL AUTO_INCREMENT,
+  `statusName` VARCHAR(30) NOT NULL,
+  `localID` INT NOT NULL,
+  PRIMARY KEY (`statusID`),
+  UNIQUE INDEX `statusName_UNIQUE` (`statusName` ASC) VISIBLE,
+  INDEX `fk_mk_localStatus_mk_locals1_idx` (`localID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_localStatus_mk_locals1`
+    FOREIGN KEY (`localID`)
+    REFERENCES `Merkadit`.`mk_locals` (`localID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_localsPerFloors`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_localsPerFloors` (
+  `localID` INT NOT NULL,
+  `floorID` INT NOT NULL,
+  `deleted` BIT NOT NULL DEFAULT 0,
+  `postTime` DATETIME NOT NULL,
+  PRIMARY KEY (`localID`, `floorID`),
+  INDEX `fk_mk_locals_has_mk_floors_mk_floors1_idx` (`floorID` ASC) VISIBLE,
+  INDEX `fk_mk_locals_has_mk_floors_mk_locals1_idx` (`localID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_locals_has_mk_floors_mk_locals1`
+    FOREIGN KEY (`localID`)
+    REFERENCES `Merkadit`.`mk_locals` (`localID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_locals_has_mk_floors_mk_floors1`
+    FOREIGN KEY (`floorID`)
+    REFERENCES `Merkadit`.`mk_floors` (`floorID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_contractsPerKiosks`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_contractsPerKiosks` (
+  `contractID` INT NOT NULL,
+  `kioskID` INT NOT NULL,
+  `startDate` DATETIME NOT NULL,
+  `endDate` DATETIME NULL,
+  PRIMARY KEY (`contractID`, `kioskID`, `startDate`),
+  INDEX `fk_mk_contracts_has_mk_kiosks_mk_kiosks1_idx` (`kioskID` ASC) VISIBLE,
+  INDEX `fk_mk_contracts_has_mk_kiosks_mk_contracts1_idx` (`contractID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_contracts_has_mk_kiosks_mk_contracts1`
+    FOREIGN KEY (`contractID`)
+    REFERENCES `Merkadit`.`mk_contracts` (`contractID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_contracts_has_mk_kiosks_mk_kiosks1`
+    FOREIGN KEY (`kioskID`)
+    REFERENCES `Merkadit`.`mk_kiosks` (`kioskID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_contractFees`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_contractFees` (
+  `contractID` INT NOT NULL,
+  `productTypeID` INT NOT NULL,
+  `feePct` DECIMAL(5,2) NULL,
+  `deleted` BIT NOT NULL DEFAULT 0,
+  `postTime` DATETIME NOT NULL,
+  `feeType` VARCHAR(20) NOT NULL,
+  `fixedAmount` DECIMAL(5,2) NULL,
+  PRIMARY KEY (`contractID`, `productTypeID`),
+  INDEX `fk_mk_contractFees_mk_productType1_idx` (`productTypeID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_contractFees_mk_contracts1`
+    FOREIGN KEY (`contractID`)
+    REFERENCES `Merkadit`.`mk_contracts` (`contractID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_contractFees_mk_productType1`
+    FOREIGN KEY (`productTypeID`)
+    REFERENCES `Merkadit`.`mk_productType` (`productTypeID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_transactionType`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_transactionType` (
+  `transactionTypeID` INT NOT NULL AUTO_INCREMENT,
+  `transactionType` VARCHAR(100) NOT NULL,
+  PRIMARY KEY (`transactionTypeID`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_transactions`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_transactions` (
+  `transactionID` INT NOT NULL AUTO_INCREMENT,
+  `amount` DECIMAL(10,2) NOT NULL,
+  `transactionDate` DATETIME NOT NULL,
+  `transactionDescription` VARCHAR(100) NOT NULL,
+  `checksum` VARCHAR(250) NOT NULL,
+  `referenceID` INT NOT NULL,
+  `transactionStatus` VARCHAR(40) NOT NULL,
+  `transactionTypeID` INT NOT NULL,
+  `userID` INT NOT NULL,
+  PRIMARY KEY (`transactionID`),
+  INDEX `fk_mk_transactions_mk_transactionType1_idx` (`transactionTypeID` ASC) VISIBLE,
+  INDEX `fk_mk_transactions_mk_users1_idx` (`userID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_transactions_mk_transactionType1`
+    FOREIGN KEY (`transactionTypeID`)
+    REFERENCES `Merkadit`.`mk_transactionType` (`transactionTypeID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_transactions_mk_users1`
+    FOREIGN KEY (`userID`)
+    REFERENCES `Merkadit`.`mk_users` (`userID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Merkadit`.`mk_markets_per_building`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Merkadit`.`mk_markets_per_building` (
+  `marketID` INT NOT NULL,
+  `buildingID` INT NOT NULL,
+  `deleted` BIT NOT NULL DEFAULT 1,
+  `postTime` DATETIME NOT NULL,
+  PRIMARY KEY (`marketID`, `buildingID`),
+  INDEX `fk_mk_markets_has_mk_building_mk_building1_idx` (`buildingID` ASC) VISIBLE,
+  INDEX `fk_mk_markets_has_mk_building_mk_markets1_idx` (`marketID` ASC) VISIBLE,
+  CONSTRAINT `fk_mk_markets_has_mk_building_mk_markets1`
+    FOREIGN KEY (`marketID`)
+    REFERENCES `Merkadit`.`mk_markets` (`marketID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_mk_markets_has_mk_building_mk_building1`
+    FOREIGN KEY (`buildingID`)
+    REFERENCES `Merkadit`.`mk_building` (`buildingID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
