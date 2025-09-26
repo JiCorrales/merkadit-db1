@@ -1,14 +1,18 @@
-import 'dotenv/config';
 import express from 'express';
+import morgan from 'morgan';
+import "dotenv/config";
 
 const app = express();
-const port = process.env.PORT;
 
+app.use(morgan('dev'));
 app.use(express.json());
 
-app.use('/api', (req, res) => {
+app.get('/', (_req, res) => {
     res.send('Hello from API');
 });
-
+app.listen(process.env.PORT, () => {
+    console.log("Server running on port " + process.env.PORT);
+  // Initialization hooks could go here (e.g. database connection)
+});
 
 export default app;
