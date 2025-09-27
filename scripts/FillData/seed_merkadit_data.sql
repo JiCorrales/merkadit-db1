@@ -28,7 +28,7 @@ TRUNCATE TABLE mk_addresses;
 TRUNCATE TABLE mk_cities;
 TRUNCATE TABLE mk_states;
 TRUNCATE TABLE mk_countries;
-TRUNCATE TABLE mk_productType;
+TRUNCATE TABLE mk_productTypes;
 TRUNCATE TABLE mk_clients;
 TRUNCATE TABLE mk_clientType;
 TRUNCATE TABLE mk_userRoles;
@@ -37,7 +37,7 @@ TRUNCATE TABLE mk_users;
 TRUNCATE TABLE mk_logLevels;
 TRUNCATE TABLE mk_logServices;
 TRUNCATE TABLE mk_logTypes;
-TRUNCATE TABLE mk_transactionType;
+TRUNCATE TABLE mk_transactionTypes;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- Master data
@@ -119,7 +119,7 @@ INSERT INTO mk_roles (roleName, enabled) VALUES ('ADMIN', b'1'), ('CASHIER', b'1
 INSERT INTO mk_logTypes (logTypeName) VALUES ('BUSINESS');
 INSERT INTO mk_logServices (logServiceName) VALUES ('POS');
 INSERT INTO mk_logLevels (logLevelName) VALUES ('INFO'), ('ERROR');
-INSERT INTO mk_transactionType (transactionType) VALUES ('SALE_PAYMENT'), ('REFUND');
+INSERT INTO mk_transactionTypes (transactionType) VALUES ('SALE_PAYMENT'), ('REFUND');
 
 -- Randomized user generation using temporary tables
 DROP TEMPORARY TABLE IF EXISTS tmp_user_first_names;
