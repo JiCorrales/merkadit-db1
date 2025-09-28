@@ -28,7 +28,7 @@ TRUNCATE TABLE mk_addresses;
 TRUNCATE TABLE mk_cities;
 TRUNCATE TABLE mk_states;
 TRUNCATE TABLE mk_countries;
-TRUNCATE TABLE mk_productTypes;
+TRUNCATE TABLE mk_productType;
 TRUNCATE TABLE mk_clients;
 TRUNCATE TABLE mk_clientType;
 TRUNCATE TABLE mk_userRoles;
