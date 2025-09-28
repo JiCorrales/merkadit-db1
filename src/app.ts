@@ -1,8 +1,14 @@
 import express from "express";
 import morgan from "morgan";
+import dotenv from "dotenv";
 
-const port = 8080;
+import saleRoutes from "./routes/saleRoutes";
+
+dotenv.config();
+
+const port = Number(process.env.PORT ?? 8080);
 const app = express();
+
 app.use(morgan("dev"));
 app.use(express.json());
 
@@ -10,9 +16,10 @@ app.get("/", (_req, res) => {
     res.send("Hello from API");
 });
 
-app.listen(port, () => {
-    console.log(`Server running on port http://localhost:${port}`);
+app.use("/sales", saleRoutes);
 
-} );
+app.listen(port, () => {
+    console.log("Server running on port http://localhost:" + port);
+});
 
 export default app;

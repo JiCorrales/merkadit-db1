@@ -1,0 +1,66 @@
+{
+	"info": {
+		"_postman_id": "5d2ec41c-9af5-4c58-b68e-7d89739b645a",
+		"name": "Merkadit API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32874362"
+	},
+	"item": [
+		{
+			"name": "registerSale",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"productName\": \"GalletaChoco\",\n  \"localName\": \"Local Central\",\n  \"qtySold\": 2,\n  \"amountPaid\": 8500,\n  \"paymentMethod\": \"SINPE\",\n  \"paymentConfirmations\": \"123456\",\n  \"referenceNumbers\": \"EXT-REF-001\",\n  \"invoiceNumber\": 420,\n  \"clientCode\": \"CLI-0036-4004\",\n  \"discountApplied\": 500,\n  \"userId\": 3\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/sales",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"sales"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": ""
+		}
+	]
+}
