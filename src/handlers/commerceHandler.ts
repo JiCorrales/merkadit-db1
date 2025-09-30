@@ -14,6 +14,8 @@ import { z, ZodError } from "zod";
 import * as commerceController from "../controllers/commerceController";
 import { CommerceValidationError } from "../services/commerceService";
 
+/* The `basicSettlePayloadSchema` constant is defining a schema using the Zod library for validating
+the payload received in the `settleCommerceHandler` function. */
 const basicSettlePayloadSchema = z.object({
     comercioNombre: z.string().trim().min(1),
     localNombre: z.string().trim().min(1),
@@ -21,6 +23,19 @@ const basicSettlePayloadSchema = z.object({
     computadora: z.string().trim().min(1)
 }).strict(); 
 
+/**
+ * The function `settleCommerceHandler` handles settling commerce transactions, parsing the payload,
+ * calling the commerce controller, and returning appropriate responses based on errors encountered.
+ * @param {Request} req - The `req` parameter in the `settleCommerceHandler` function represents the
+ * incoming request object. It contains information about the HTTP request made to the server, such as
+ * headers, body, parameters, and query strings. In this specific context, it is of type `Request`,
+ * which is likely from
+ * @param {Response} res - The `res` parameter in the `settleCommerceHandler` function is an instance
+ * of the `Response` class from an HTTP framework like Express.js. It is used to send the HTTP
+ * response back to the client with the appropriate status code and data.
+ * @returns The `settleCommerceHandler` function is returning different JSON responses based on the
+ * type of error encountered:
+ */
 export const settleCommerceHandler = async (req: Request, res: Response) => {
     try {
         const payload = basicSettlePayloadSchema.parse(req.body);

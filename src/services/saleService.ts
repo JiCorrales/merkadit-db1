@@ -18,6 +18,10 @@ import { getSalePricing } from "../repositories/pricingRepository";
 
 const TAX_RATE = 0.13;
 
+/* The `registerSaleSchema` constant is defining a schema using the `zod` library for validating the
+input payload of the `registerSale` function. Each property in the schema corresponds to a specific
+field that is expected in the payload object. Here's a breakdown of what each property in the schema
+is doing: */
 const registerSaleSchema = z.object({
     productName: z.string().trim().min(1).max(20),
     localName: z.string().trim().min(1).max(20),
@@ -30,10 +34,17 @@ const registerSaleSchema = z.object({
     clientCode: z.string().trim().min(1).max(50),
     discountApplied: z.coerce.number().min(0),
     userId: z.coerce.number().int().positive()
-});
+})
 
-const toMoney = (value: number): number => Math.round(value * 100) / 100;
+/**
+ * The `toMoney` function in TypeScript rounds a number to two decimal places.
+ * @param {number} value - The `value` parameter in the `toMoney` function is a number that represents
+ * a monetary value.
+ */
+const toMoney = (value: number): number => Math.round(value * 100) / 100
 
+/* The `SaleValidationError` class is a custom error class in TypeScript that extends the built-in
+`Error` class and sets its name to "SaleValidationError". */
 export class SaleValidationError extends Error {
     constructor(message: string) {
         super(message);
@@ -42,6 +53,7 @@ export class SaleValidationError extends Error {
 }
 
 export type RegisterSaleInput = z.infer<typeof registerSaleSchema>;
+
 export type RegisterSaleResponse = RegisterSaleResult & {
     message: string
     amountPaid: number
@@ -51,7 +63,7 @@ export type RegisterSaleResponse = RegisterSaleResult & {
     taxAmount?: number
     discountApplied?: number
     expectedTotal?: number
-};
+}
 
 /**
  * The function `registerSale` processes a sale transaction, calculates pricing, validates the

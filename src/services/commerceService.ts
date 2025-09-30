@@ -15,6 +15,8 @@ import {
     SettleCommerceResult
 } from "../repositories/commerceRepository";
 
+/* The `settleCommerceSchema` constant is defining a schema using the Zod library for validating the
+input payload expected by the `settleCommerce` function. */
 const settleCommerceSchema = z.object({
     comercioNombre: z.string().trim().min(1).max(50),
     localNombre: z.string().trim().min(1).max(45),
@@ -22,14 +24,17 @@ const settleCommerceSchema = z.object({
     computadora: z.string().trim().min(1).max(120)
 });
 
+/* The `CommerceValidationError` class is a custom error class in TypeScript used for handling
+validation errors in commerce-related applications. */
 export class CommerceValidationError extends Error {
     constructor(message: string) {
         super(message);
         this.name = "CommerceValidationError";
     }
 }
-
+// Define the input type for the settleCommerce function
 export type SettleCommerceInput = z.infer<typeof settleCommerceSchema>;
+// Define the response type for the settleCommerce function
 export type SettleCommerceResponse = SettleCommerceResult & {
     message: string
 };
