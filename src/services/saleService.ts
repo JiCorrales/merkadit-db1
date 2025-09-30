@@ -1,3 +1,12 @@
+/**
+ * @file saleService.ts
+ * Service Layer (Complex Business Logic):
+ * @purpose This layer encapsulates complex business operations and transactions that may involve multiple
+ *  entities or repository calls.
+ * @Responsibilities It implements use cases that are too complex for a single repository, often
+ *  orchestrating calls to multiple repositories. It is called by the controller layer.
+ */
+
 import { z } from "zod";
 
 import {
@@ -69,10 +78,10 @@ export const registerSale = async (payload: unknown): Promise<RegisterSaleRespon
     } | null = null
 
     if (pricing) {
-        const subTotal = pricing.unitPrice * data.qtySold
-        const discountedTotal = subTotal - data.discountApplied
-        const taxAmount = discountedTotal * TAX_RATE
-        const expectedTotal = discountedTotal + taxAmount
+        const subTotal = toMoney(pricing.unitPrice * data.qtySold)
+        const discountedTotal = toMoney(subTotal - data.discountApplied)
+        const taxAmount = toMoney(discountedTotal * TAX_RATE)
+        const expectedTotal = toMoney(discountedTotal + taxAmount)
 
         if (expectedTotal < 0) {
             throw new SaleValidationError("Calculated total is negative; review the discount applied.")
@@ -83,7 +92,7 @@ export const registerSale = async (payload: unknown): Promise<RegisterSaleRespon
         }
 
         calculation = {
-            unitPrice: pricing.unitPrice,
+            unitPrice: toMoney(pricing.unitPrice),
             subTotal,
             taxAmount,
             expectedTotal
@@ -106,21 +115,27 @@ export const registerSale = async (payload: unknown): Promise<RegisterSaleRespon
 
     const result = await registerSaleRepository(repositoryParams)
 
+    const normalizedResult: RegisterSaleResult = {
+        ...result,
+        total: toMoney(result.total)
+    }
+
     const response: RegisterSaleResponse = {
         message: "Sale registered successfully",
-        ...result,
+        ...normalizedResult,
         amountPaid: toMoney(data.amountPaid),
-        change: toMoney(data.amountPaid - result.total)
+        change: toMoney(data.amountPaid - normalizedResult.total)
     }
 
     if (calculation) {
-        response.unitPrice = calculation.unitPrice
-        response.subTotal = calculation.subTotal
-        response.taxAmount = calculation.taxAmount
-        response.discountApplied = data.discountApplied
-        response.expectedTotal = calculation.expectedTotal
+        response.unitPrice = toMoney(calculation.unitPrice)
+        response.subTotal = toMoney(calculation.subTotal)
+        response.taxAmount = toMoney(calculation.taxAmount)
+        response.discountApplied = toMoney(data.discountApplied)
+        response.expectedTotal = toMoney(calculation.expectedTotal)
     }
 
     return response
 }
+
 

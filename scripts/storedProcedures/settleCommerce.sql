@@ -25,8 +25,6 @@ BEGIN
     
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
-        
         -- Obtener el mensaje de error
         GET DIAGNOSTICS CONDITION 1 vErrorMessage = MESSAGE_TEXT;
         
@@ -46,10 +44,46 @@ BEGIN
             (SELECT logServiceId FROM mk_logServices WHERE logServiceName = 'FINANCIAL'),
             (SELECT logLevelId FROM mk_logLevels WHERE logLevelName = 'ERROR')
         );
-        
-        -- RESIGNAL debe ir solo, sin nada después
+        ROLLBACK;
         RESIGNAL;
     END;
+
+    -- Ensure master data for logging and transaction types
+    INSERT INTO mk_logTypes (logTypeName)
+    SELECT 'SETTLEMENT_ERROR'
+    WHERE NOT EXISTS (SELECT 1 FROM mk_logTypes WHERE logTypeName = 'SETTLEMENT_ERROR');
+
+    INSERT INTO mk_logTypes (logTypeName)
+    SELECT 'SETTLEMENT_WARNING'
+    WHERE NOT EXISTS (SELECT 1 FROM mk_logTypes WHERE logTypeName = 'SETTLEMENT_WARNING');
+
+    INSERT INTO mk_logTypes (logTypeName)
+    SELECT 'SETTLEMENT_SUCCESS'
+    WHERE NOT EXISTS (SELECT 1 FROM mk_logTypes WHERE logTypeName = 'SETTLEMENT_SUCCESS');
+
+    INSERT INTO mk_logServices (logServiceName)
+    SELECT 'FINANCIAL'
+    WHERE NOT EXISTS (SELECT 1 FROM mk_logServices WHERE logServiceName = 'FINANCIAL');
+
+    INSERT INTO mk_logLevels (logLevelName)
+    SELECT 'INFO'
+    WHERE NOT EXISTS (SELECT 1 FROM mk_logLevels WHERE logLevelName = 'INFO');
+
+    INSERT INTO mk_logLevels (logLevelName)
+    SELECT 'ERROR'
+    WHERE NOT EXISTS (SELECT 1 FROM mk_logLevels WHERE logLevelName = 'ERROR');
+
+    INSERT INTO mk_logLevels (logLevelName)
+    SELECT 'WARNING'
+    WHERE NOT EXISTS (SELECT 1 FROM mk_logLevels WHERE logLevelName = 'WARNING');
+
+    INSERT INTO mk_transactionTypes (transactionType)
+    SELECT 'COMISION_VENTAS'
+    WHERE NOT EXISTS (SELECT 1 FROM mk_transactionTypes WHERE transactionType = 'COMISION_VENTAS');
+
+    INSERT INTO mk_transactionTypes (transactionType)
+    SELECT 'PAGO_ALQUILER'
+    WHERE NOT EXISTS (SELECT 1 FROM mk_transactionTypes WHERE transactionType = 'PAGO_ALQUILER');
 
     START TRANSACTION;
 
@@ -70,7 +104,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Comercio o local no encontrado';
     END IF;
 
-    -- 2. Obtener mes/año actual
+    -- 2. Obtener mes/aÃƒÂ±o actual
     SET vMesActual = MONTH(CURRENT_DATE());
     SET vAnioActual = YEAR(CURRENT_DATE());
 
@@ -110,7 +144,7 @@ BEGIN
           AND MONTH(r.postTime) = vMesActual
           AND YEAR(r.postTime) = vAnioActual;
 
-        -- 5. Obtener porcentaje de comisión
+        -- 5. Obtener porcentaje de comisiÃƒÂ³n
         SELECT feeOnSales INTO vComisionPorcentaje
         FROM mk_contracts
         WHERE contractId = vContractId;
@@ -122,14 +156,14 @@ BEGIN
         -- 7. Generar checksum
         SET vChecksum = SHA2(CONCAT(vTenantId, vLocalId, vTotalVentas, vMontoComision, NOW()), 256);
 
-        -- 8. Registrar transacción de comisión
+        -- 8. Registrar transacciÃƒÂ³n de comisiÃƒÂ³n
         INSERT INTO mk_transactions (
             amount, transactionDate, transactionDescription, checksum,
             referenceId, transactionStatus, transactionTypeId, userId
         ) VALUES (
             -vMontoComision, 
             NOW(),
-            CONCAT('Comisión ventas ', MONTHNAME(CURRENT_DATE()), ' ', vAnioActual),
+            CONCAT('ComisiÃƒÂ³n ventas ', MONTHNAME(CURRENT_DATE()), ' ', vAnioActual),
             vChecksum, 
             vContractId, 
             'successful',
@@ -137,7 +171,7 @@ BEGIN
             pUsuarioId
         );
 
-        -- 9. Registrar transacción de pago al tenant
+        -- 9. Registrar transacciÃƒÂ³n de pago al tenant
         INSERT INTO mk_transactions (
             amount, transactionDate, transactionDescription, checksum,
             referenceId, transactionStatus, transactionTypeId, userId
@@ -160,7 +194,7 @@ BEGIN
             NOW(), 
             'Settlement completado exitosamente', 
             vTenantId,
-            CONCAT('Ventas: $', vTotalVentas, ', Comisión: $', vMontoComision, ', Neto Tenant: $', vMontoTenant),
+            CONCAT('Ventas: $', vTotalVentas, ', ComisiÃƒÂ³n: $', vMontoComision, ', Neto Tenant: $', vMontoTenant),
             vChecksum, 
             pComputadora, 
             pUsuarioId,
@@ -229,3 +263,6 @@ SELECT
 FROM mk_logs 
 WHERE description LIKE '%Settlement%'
 ORDER BY logID DESC;
+
+
+

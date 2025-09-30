@@ -27,7 +27,7 @@ BEGIN
     DECLARE vTotal DECIMAL(10,2);
     DECLARE vTaxApplied BIT;
     DECLARE vTaxAmount DECIMAL(10,2);
-
+    
     DECLARE vReceiptID INT;
     DECLARE vPaymentID INT;
     DECLARE vClientID INT;
@@ -203,8 +203,8 @@ BEGIN
     -- Paso 5: Totales y Checksums
     SET vSubTotal = vUnitPrice * pQtySold;
     SET @taxApplied = 1;
-    SET @taxAmount = vSubTotal * 0.13; -- Asumiendo un 13% de IVA
-    SET vTotal = vSubTotal + @taxAmount - pDiscountApplied; 
+    SET @taxAmount = ROUND(vSubTotal * CAST(0.13 AS DECIMAL(5,4)), 2);
+    SET vTotal     = ROUND(vSubTotal + @taxAmount - pDiscountApplied, 2);
 
     -- Validamos el total
     IF vTotal < 0 THEN

@@ -1,3 +1,13 @@
+/**
+ * @file saleController.ts
+ * Controller Layer (Business Logic Orchestration):
+ * @purpose This layer contains the core application logic and acts as a coordinator.
+ * @Responsibilities It processes the data received from the handler, makes decisions, validates
+ * business rules, and calls the appropriate methods in the service layer. It should not contain 
+ * direct data access code.
+ */
+
+
 import type { RegisterSaleResponse } from "../services/saleService";
 import {registerSale as registerSaleService} from "../services/saleService";
 

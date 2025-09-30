@@ -3,7 +3,8 @@
 		"_postman_id": "5d2ec41c-9af5-4c58-b68e-7d89739b645a",
 		"name": "Merkadit API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "32874362"
+		"_exporter_id": "32874362",
+		"_collection_link": "https://restless-space-734858.postman.co/workspace/My-Workspace~ff071dcf-30d8-4e04-8c73-4f7126a97c7f/collection/32874362-5d2ec41c-9af5-4c58-b68e-7d89739b645a?action=share&source=collection_link&creator=32874362"
 	},
 	"item": [
 		{
@@ -27,6 +28,33 @@
 					],
 					"path": [
 						"sales"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "settleCommerce",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"comercioNombre\": \"Sabores Tropico L-101\",\n  \"localNombre\": \"Local Central\",\n  \"usuarioId\": 1,\n  \"computadora\": \"POS-SERVER-01\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/commerce/settle",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"commerce",
+						"settle"
 					]
 				}
 			},

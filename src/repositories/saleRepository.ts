@@ -1,3 +1,11 @@
+/**
+ * @file  saleRepository.ts
+ * Repository Layer (Data Access):
+ * @purpose This is the layer responsible for all direct communication with the database.
+ * @Responsibilities t executes SQL queries, calls stored procedures, and maps raw database data 
+ * into application objects. It should be the only layer that knows about the database schema and technology.
+ */
+
 import type { PoolConnection, RowDataPacket } from "mysql2/promise";
 
 import pool from "../config/db";

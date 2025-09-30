@@ -1,35 +1,51 @@
-import type { Request, Response } from "express";
-import * as commerceController from "../controllers/commerceController";
-import { ZodError } from "zod";
-
 /**
- * The function `settleCommerceHandler` handles commerce settlement and returns appropriate responses
- * based on different error scenarios.
- * @param {Request} req - The `req` parameter in the `settleCommerceHandler` function is of type
- * `Request`, which typically represents the HTTP request in Express.js or similar frameworks. It
- * contains information about the incoming request such as headers, parameters, body, etc.
- * @param {Response} res - The `res` parameter in the `settleCommerceHandler` function is an object
- * representing the HTTP response that the server sends back to the client. It allows you to send data
- * back to the client, set status codes, and more.
- * @returns The `settleCommerceHandler` function is returning a response based on the outcome of
- * commerce settlement. If the settlement is successful, it returns a status of 200 (OK)
- * along with the result in JSON format. If an error occurs during the settlement process, it handles
- * different types of errors appropriately.
+ * @file commerceHandler.ts
+ * Handler Layer (API Routes/Endpoints):
+ * @purpose This is the outermost layer that receives HTTP requests and sends HTTP responses.
+ * @Responsibilities It handles protocol-specific tasks like parsing incoming request data 
+ * (JSON, query parameters), validating basic input format, routing requests to the appropriate 
+ * controller, and returning the controller's response to the client with the correct status codes 
+ * and data formatting. 
  */
-export const settleCommerceHandler = async (req: Request, res: Response)  => {
+
+import type { Request, Response } from "express";
+import { z, ZodError } from "zod";
+
+import * as commerceController from "../controllers/commerceController";
+import { CommerceValidationError } from "../services/commerceService";
+
+const basicSettlePayloadSchema = z.object({
+    comercioNombre: z.string().trim().min(1),
+    localNombre: z.string().trim().min(1),
+    usuarioId: z.union([z.number(), z.string().trim().min(1)]),
+    computadora: z.string().trim().min(1)
+}).strict(); 
+
+export const settleCommerceHandler = async (req: Request, res: Response) => {
     try {
-        const result = await commerceController.settleCommerce(req.body);
-        res.status(200).json(result)
-    } catch (error: any) {
-        if (error instanceof ZodError) return res.status(400).json({ message: error.message, errors: error.issues })
-        if (error.http) return res.status(error.http.status).json({ message: error.message, code: error.code})
-        
-        // MySQL SIGNNAL '45000' error
-        if (error?.sqlState === "45000" || error?.errno === 1644) {
-            return res.status(400).json({ message: error.sqlMessage || "Database validation error" })
+        const payload = basicSettlePayloadSchema.parse(req.body);
+        const result = await commerceController.settleCommerce(payload);
+        res.status(200).json(result);
+    } catch (error: unknown) {
+        if (error instanceof ZodError) {
+            return res.status(400).json({ message: "Invalid settle payload", errors: error.issues });
+        }
+
+        if (error instanceof CommerceValidationError) {
+            return res.status(400).json({ message: error.message });
+        }
+
+        const err = error as any;
+
+        if (err?.http) {
+            return res.status(err.http.status).json({ message: err.message, code: err.code });
+        }
+
+        if (err?.sqlState === "45000" || err?.errno === 1644) {
+            return res.status(400).json({ message: err.sqlMessage || "Database validation error" });
         }
 
         console.error(error);
         res.status(500).json({ message: "Unexpected server error" });
     }
-}
+};

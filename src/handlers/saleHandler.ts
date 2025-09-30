@@ -1,6 +1,17 @@
+/**
+ * @file saleHandler.ts
+ * Handler Layer (API Routes/Endpoints):
+ * @purpose This is the outermost layer that receives HTTP requests and sends HTTP responses.
+ * @Responsibilities It handles protocol-specific tasks like parsing incoming request data 
+ * (JSON, query parameters), validating basic input format, routing requests to the appropriate 
+ * controller, and returning the controller's response to the client with the correct status codes 
+ * and data formatting. 
+ */
 import type { Request, Response } from "express";
+import { z, ZodError } from "zod";
 import * as saleController from "../controllers/saleController";
-import { ZodError } from "zod";
+import { SaleValidationError } from "../services/saleService";
+
 
 
 /**
@@ -17,20 +28,52 @@ import { ZodError } from "zod";
  * along with the result in JSON format. If an error occurs during the registration process, it handles
  * different types of errors as follows:
  */
-export const registerSaleHandler = async (req: Request, res: Response)  => {
+
+
+const basicSalePayloadSchema = z.object({
+    productName: z.string().trim().min(1),
+    localName: z.string().trim().min(1),
+    qtySold: z.union([z.number(), z.string().trim().min(1)]),
+    amountPaid: z.union([z.number(), z.string().trim().min(1)]),
+    paymentMethod: z.string().trim().min(1),
+    paymentConfirmations: z.string().trim().min(1),
+    referenceNumbers: z.union([z.string().trim(), z.literal("")]).nullish(),
+    invoiceNumber: z.union([z.number(), z.string().trim().min(1)]),
+    clientCode: z.string().trim().min(1),
+    discountApplied: z.union([z.number(), z.string().trim()]).default(0),
+    userId: z.union([z.number(), z.string().trim().min(1)])
+}).strict();
+
+export const registerSaleHandler = async (req: Request, res: Response) => {
     try {
-        const result = await saleController.registerSale(req.body);
-        res.status(201).json(result)
-    } catch (error: any) {
-        if (error instanceof ZodError) return res.status(400).json({ message: error.message, errors: error.issues })
-        if (error.http) return res.status(error.http.status).json({ message: error.message, code: error.code})
-        
-        // MySQL SIGNNAL '45000' error
-        if (error?.sqlState === "45000" || error?.errno === 1644) {
-            return res.status(400).json({ message: error.sqlMessage || "Database validation error" })
+        const payload = basicSalePayloadSchema.parse(req.body);
+        const result = await saleController.registerSale(payload);
+        res.status(201).json(result);
+    } catch (error: unknown) {
+        if (error instanceof ZodError) {
+            return res.status(400).json({ message: "Invalid sale payload", errors: error.issues });
+        }
+
+        if (error instanceof SaleValidationError) {
+            return res.status(400).json({ message: error.message });
+        }
+
+        const err = error as any;
+
+        if (err?.http) {
+            return res.status(err.http.status).json({ message: err.message, code: err.code });
+        }
+
+        if (err?.sqlState === "45000" || err?.errno === 1644) {
+            return res.status(400).json({ message: err.sqlMessage || "Database validation error" });
+        }
+
+        if (err?.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({ message: err.sqlMessage || "Duplicate record" });
         }
 
         console.error(error);
         res.status(500).json({ message: "Unexpected server error" });
     }
-}
+};
+
