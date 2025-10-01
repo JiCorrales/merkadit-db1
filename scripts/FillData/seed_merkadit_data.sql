@@ -483,12 +483,11 @@ JOIN tmp_tenant_directory td ON td.tenant_seq = bp.tenant_seq;
 DROP TEMPORARY TABLE IF EXISTS tmp_inserted_products;
 CREATE TEMPORARY TABLE tmp_inserted_products AS
 SELECT
-    td.tenant_seq,
+    bp.tenant_seq,
     mp.productID,
-    ROW_NUMBER() OVER (PARTITION BY td.tenant_seq ORDER BY mp.productID) AS product_rank
-FROM mk_products mp
-JOIN tmp_tenant_directory td ON mp.name LIKE CONCAT(td.tenantDisplayName, '%')
-WHERE td.tenant_seq IN (1,3,13);
+    bp.product_rank
+FROM tmp_business_products bp
+JOIN mk_products mp ON mp.kioskID = bp.kioskID AND mp.productTypeID = bp.productTypeID AND mp.name = bp.product_label;
 
 INSERT INTO mk_productPrices (price, currentPrice, postTime, productID)
 SELECT
@@ -672,6 +671,7 @@ UNION ALL SELECT 'products', COUNT(*) FROM mk_products
 UNION ALL SELECT 'inventory', COUNT(*) FROM mk_inventory
 UNION ALL SELECT 'receipts', COUNT(*) FROM mk_receipts
 UNION ALL SELECT 'transactions', COUNT(*) FROM mk_transactions;
+
 
 
 
