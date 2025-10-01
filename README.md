@@ -52,6 +52,10 @@ La especificación oficial del **Caso #1 – Merkadit** se encuentra en el sigui
 
 ## Sales Report
 
+En orden para poder correr el reporte y que nos genere un resultado, primero debemos asegurarnos de correr el llenado de la base de datos [fill_2.0.sql](https://github.com/JiCorrales/merkadit-db1/tree/main/scripts/FillData) al contrario la base no tendra nada que retornar a la hora de llamar el vw_salesReport.
+
+Si desea agregar mas datos para ver como cambia el reporte lo puede hacer mediante el SP [registerSale](https://github.com/JiCorrales/merkadit-db1/tree/main/scripts/storedProcedures) en MySql o en postman, de querer hacerlo en postman es necesario iniciar el API con el nmp dev run estando en la carpeta principal.
+
 👉 [Puede encontrar el reporte en](https://github.com/JiCorrales/merkadit-db1/tree/main/scripts)
 ```SQL
 CREATE VIEW vw_salesReport AS	
