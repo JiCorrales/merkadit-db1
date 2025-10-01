@@ -7,8 +7,9 @@ SELECT
     SUM(rd.productAmount) AS "Productos comprados",
     SUM(r.total) AS "Total en ventas",
     c.feeOnSales AS "Porcentaje de comision",
-    SUM(r.total) * (c.feeOnSales / 100) AS "Comision acordada",
-    c.rent AS "Renta"
+    SUM(r.total) * c.feeOnSales  AS "Comision acordada",
+    c.rent AS "Renta",
+    sum(r.total) - (SUM(r.total) * c.feeOnSales) AS Ingresos
 FROM mk_tenant t 
 -- Tenant y contratos
 JOIN mk_tenantPerContracts tpc ON t.tenantID = tpc.tenantID
@@ -22,11 +23,11 @@ JOIN mk_kiosksPerFloors kpf ON k.kioskID = kpf.kioskID
 JOIN mk_floors f ON kpf.floorID = f.floorID
 JOIN mk_building b ON f.buildingID = b.buildingID
 -- Recibos
-JOIN mk_receipts r ON k.kioskID = r.kioskID
+LEFT JOIN mk_receipts r ON k.kioskID = r.kioskID
     AND MONTH(r.postTime) = MONTH(CURRENT_DATE())
     AND YEAR(r.postTime) = YEAR(CURRENT_DATE())
 -- Detalles de recibos
-JOIN mk_receiptDetails rd ON r.receiptID = rd.receiptID
+LEFT JOIN mk_receiptDetails rd ON r.receiptID = rd.receiptID
 WHERE tpc.deleted = 0 
     AND c.expirationDate >= CURRENT_DATE()
     AND cpk.deleted = 0
