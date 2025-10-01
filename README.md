@@ -50,7 +50,7 @@ La especificación oficial del **Caso #1 – Merkadit** se encuentra en el sigui
 
 ---
 
-## Para poder ejecutar el reporte solamente se necesita llamar a la view que se creo para ello.
+## Sales Report
 
 ```SQL
 CREATE VIEW vw_salesReport AS	
@@ -110,9 +110,10 @@ CREATE VIEW vw_salesReport AS
 
 ```
 
-Si utilizamos un SELECT para llamar el view se nos mostrara el resultado de este el cual es el siguiente
+Si utilizamos un SELECT para llamar el view se nos mostrara el resultado de este el cual es el siguiente.
 
-# Reporte de Ventas - Negocios
+# Reporte de Ventas 
+👉 [Puede encontrar el reporte en](https://github.com/JiCorrales/merkadit-db1/tree/main/scripts)
 
 | Nombre Tienda | Nombre Negocio | Edificio | Fecha primer compra | Fecha ultima compra | Productos comprados | Total en ventas | Porcentaje de comision | Comision acordada | Renta | Ingresos |
 |---------------|----------------|----------|---------------------|---------------------|---------------------|-----------------|------------------------|------------------|-------|----------|
