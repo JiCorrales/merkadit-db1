@@ -24,7 +24,7 @@ field that is expected in the payload object. Here's a breakdown of what each pr
 is doing: */
 const registerSaleSchema = z.object({
     productName: z.string().trim().min(1).max(20),
-    localName: z.string().trim().min(1).max(20),
+    localName: z.string().trim().min(1).max(30),
     qtySold: z.coerce.number().int().positive(),
     amountPaid: z.coerce.number().min(0),
     paymentMethod: z.string().trim().min(1).max(100),

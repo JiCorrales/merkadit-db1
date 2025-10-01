@@ -87,10 +87,9 @@ const receiptLookupQuery = [
     "    r.receiptNumber AS invoiceNumber,",
     "    r.total AS total",
     "FROM mk_receipts r",
-    "    INNER JOIN mk_kiosks k ON k.kioskID = r.kioskID",
-    "    INNER JOIN mk_locals l ON l.localID = k.localID",
+    "    INNER JOIN mk_kiosks k ON k.kioskID = r.kioskID",,
     "WHERE r.receiptNumber = ?",
-    "  AND l.localName = ?",
+    "  AND k.kioskName = ?",
     "ORDER BY r.postTime DESC",
     "LIMIT 1;"
 ].join("\n")
