@@ -1,5 +1,4 @@
 ﻿
-DROP PROCEDURE IF EXISTS registerSale;
 DELIMITER //
 CREATE PROCEDURE registerSale(
     IN pProductName           VARCHAR(20),

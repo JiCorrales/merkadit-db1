@@ -643,13 +643,16 @@ DROP TEMPORARY TABLE IF EXISTS tmp_sales_businesses;
 CREATE TEMPORARY TABLE tmp_sales_businesses AS
 SELECT * FROM tmp_inventory_businesses WHERE tenant_seq IN (1, 7); -- Solo 2 negocios
 
+-- Definir rango de 4 meses
 DROP TEMPORARY TABLE IF EXISTS tmp_months;
 CREATE TEMPORARY TABLE tmp_months AS
-SELECT 0 AS month_index, @month_anchor AS month_start, DAY(LAST_DAY(@month_anchor)) AS days_in_month
-UNION ALL SELECT 1, DATE_SUB(@month_anchor, INTERVAL 1 MONTH), DAY(LAST_DAY(DATE_SUB(@month_anchor, INTERVAL 1 MONTH)))
-UNION ALL SELECT 2, DATE_SUB(@month_anchor, INTERVAL 2 MONTH), DAY(LAST_DAY(DATE_SUB(@month_anchor, INTERVAL 2 MONTH)))
-UNION ALL SELECT 3, DATE_SUB(@month_anchor, INTERVAL 3 MONTH), DAY(LAST_DAY(DATE_SUB(@month_anchor, INTERVAL 3 MONTH)));
+SELECT 0 AS month_index, DATE_SUB(@month_anchor, INTERVAL 3 MONTH) AS month_start, 
+       DAY(LAST_DAY(DATE_SUB(@month_anchor, INTERVAL 3 MONTH))) AS days_in_month
+UNION ALL SELECT 1, DATE_SUB(@month_anchor, INTERVAL 2 MONTH), DAY(LAST_DAY(DATE_SUB(@month_anchor, INTERVAL 2 MONTH)))
+UNION ALL SELECT 2, DATE_SUB(@month_anchor, INTERVAL 1 MONTH), DAY(LAST_DAY(DATE_SUB(@month_anchor, INTERVAL 1 MONTH)))
+UNION ALL SELECT 3, @month_anchor, DAY(LAST_DAY(@month_anchor));
 
+-- Generar plan de ventas distribuido en 4 meses
 DROP TEMPORARY TABLE IF EXISTS tmp_sales_plan;
 CREATE TEMPORARY TABLE tmp_sales_plan AS
 SELECT
@@ -660,13 +663,26 @@ SELECT
     m.month_index,
     m.month_start,
     m.days_in_month,
+    -- Distribuir ventas proporcionalmente por mes (más ventas en meses recientes)
+    CASE m.month_index
+        WHEN 0 THEN 25  -- Mes actual: 25 ventas
+        WHEN 1 THEN 20  -- Mes anterior: 20 ventas
+        WHEN 2 THEN 15  -- Hace 2 meses: 15 ventas
+        WHEN 3 THEN 10  -- Hace 3 meses: 10 ventas
+    END AS sales_per_month,
     ROW_NUMBER() OVER (PARTITION BY sb.tenant_seq, m.month_index ORDER BY n.num) AS sale_seq,
     n.num AS raw_seq
 FROM tmp_sales_businesses sb
 JOIN tmp_months m
-JOIN tmp_numbers_large n ON n.num BETWEEN 1 AND 80  -- Más ventas por negocio
-WHERE m.month_index IN (0, 1, 2, 3);  -- Últimos 4 meses
+JOIN tmp_numbers_large n ON n.num BETWEEN 1 AND 70  -- Suficiente para cubrir todas las ventas
+WHERE n.num <= CASE m.month_index
+        WHEN 0 THEN 25
+        WHEN 1 THEN 20  
+        WHEN 2 THEN 15
+        WHEN 3 THEN 10
+    END;
 
+-- Generar fechas y horas de venta distribuidas en los 4 meses
 DROP TEMPORARY TABLE IF EXISTS tmp_sales_lines;
 CREATE TEMPORARY TABLE tmp_sales_lines AS
 SELECT
@@ -679,14 +695,15 @@ SELECT
     sp.days_in_month,
     sp.sale_seq,
     sp.raw_seq,
-    CASE
-        WHEN sp.month_index = 0 THEN DATE_ADD(sp.month_start, INTERVAL (sp.raw_seq % GREATEST(1, DAY(@seed_now))) DAY)
-        ELSE DATE_ADD(sp.month_start, INTERVAL (sp.raw_seq % sp.days_in_month) DAY)
-    END AS saleDate,
-    SEC_TO_TIME(25200 + (sp.raw_seq % 46800)) AS saleTime, -- 7:00 AM a 8:00 PM
-    (sp.raw_seq % 3) + 1 AS quantity  -- 1-3 unidades por venta
+    -- Distribuir las ventas uniformemente a lo largo del mes
+    DATE_ADD(sp.month_start, INTERVAL (sp.raw_seq * FLOOR(sp.days_in_month / sp.sales_per_month)) DAY) AS saleDate,
+    -- Horarios de venta realistas (8 AM - 8 PM)
+    SEC_TO_TIME(28800 + (sp.raw_seq % 43200)) AS saleTime, -- 8:00 AM a 8:00 PM
+    -- Cantidades realistas (1-4 unidades por venta)
+    (sp.raw_seq % 4) + 1 AS quantity
 FROM tmp_sales_plan sp;
 
+-- Enriquecer con información de productos y precios
 DROP TEMPORARY TABLE IF EXISTS tmp_sales_enriched;
 CREATE TEMPORARY TABLE tmp_sales_enriched AS
 SELECT
@@ -699,6 +716,7 @@ JOIN tmp_inserted_products ip ON ip.tenant_seq = sl.tenant_seq
     AND ip.product_rank = ((sl.sale_seq - 1) % 5) + 1  -- Rotar entre los 5 productos
 JOIN mk_productPrices pp ON pp.productID = ip.productID AND pp.currentPrice = b'1';
 
+-- Calcular montos financieros
 DROP TEMPORARY TABLE IF EXISTS tmp_receipt_financials;
 CREATE TEMPORARY TABLE tmp_receipt_financials AS
 SELECT
@@ -711,14 +729,16 @@ SELECT
     se.quantity,
     TIMESTAMP(se.saleDate, se.saleTime) AS saleDateTime,
     ROUND(se.priceAmount * se.quantity, 2) AS grossSubTotal,
+    -- Aplicar descuentos ocasionales (10% cada 15 ventas, 5% cada 10 ventas)
     CASE 
-        WHEN se.global_sale_seq % 12 = 0 THEN ROUND(se.priceAmount * se.quantity * 0.10, 2)  -- 10% descuento
-        WHEN se.global_sale_seq % 8 = 0 THEN ROUND(se.priceAmount * se.quantity * 0.05, 2)   -- 5% descuento
+        WHEN se.global_sale_seq % 15 = 0 THEN ROUND(se.priceAmount * se.quantity * 0.10, 2)
+        WHEN se.global_sale_seq % 10 = 0 THEN ROUND(se.priceAmount * se.quantity * 0.05, 2)
         ELSE 0 
     END AS discountAmount,
     se.productTypeID
 FROM tmp_sales_enriched se;
 
+-- Calcular impuestos y totales
 DROP TEMPORARY TABLE IF EXISTS tmp_receipt_financials_ext;
 CREATE TEMPORARY TABLE tmp_receipt_financials_ext AS
 SELECT
@@ -822,3 +842,8 @@ UNION ALL SELECT 'inventory', COUNT(*) FROM mk_inventory
 UNION ALL SELECT 'receipts', COUNT(*) FROM mk_receipts
 UNION ALL SELECT 'receipt_details', COUNT(*) FROM mk_receiptDetails
 UNION ALL SELECT 'transactions', COUNT(*) FROM mk_transactions;
+
+
+UPDATE mk_contractsPerKiosks
+SET deleted = 1
+WHERE contractID IN (2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13 ,14);

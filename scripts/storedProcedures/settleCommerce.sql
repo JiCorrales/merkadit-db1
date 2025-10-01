@@ -1,4 +1,3 @@
-﻿DROP PROCEDURE IF EXISTS settleCommerce;
 DELIMITER //
 CREATE PROCEDURE settleCommerce(
     IN pTenantName   VARCHAR(60),

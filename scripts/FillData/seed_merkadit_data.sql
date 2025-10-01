@@ -1,4 +1,3 @@
-﻿USE Merkadit;
 
 SET @seed_now := NOW();
 SET @month_anchor := DATE_SUB(DATE(@seed_now), INTERVAL DAYOFMONTH(@seed_now) - 1 DAY);

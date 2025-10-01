@@ -22,11 +22,11 @@ JOIN mk_kiosksPerFloors kpf ON k.kioskID = kpf.kioskID
 JOIN mk_floors f ON kpf.floorID = f.floorID
 JOIN mk_building b ON f.buildingID = b.buildingID
 -- Recibos
-LEFT JOIN mk_receipts r ON k.kioskID = r.kioskID
+JOIN mk_receipts r ON k.kioskID = r.kioskID
     AND MONTH(r.postTime) = MONTH(CURRENT_DATE())
     AND YEAR(r.postTime) = YEAR(CURRENT_DATE())
 -- Detalles de recibos
-LEFT JOIN mk_receiptDetails rd ON r.receiptID = rd.receiptID
+JOIN mk_receiptDetails rd ON r.receiptID = rd.receiptID
 WHERE tpc.deleted = 0 
     AND c.expirationDate >= CURRENT_DATE()
     AND cpk.deleted = 0
