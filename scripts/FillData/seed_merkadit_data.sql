@@ -1,9 +1,4 @@
-﻿
--- seed_merkadit_data.sql
--- Resets and populates Merkadit with sample data aligned to updated schema.
--- WARNING: this script truncates data for all referenced tables.
-
-USE Merkadit;
+﻿USE Merkadit;
 
 SET @seed_now := NOW();
 SET @month_anchor := DATE_SUB(DATE(@seed_now), INTERVAL DAYOFMONTH(@seed_now) - 1 DAY);
