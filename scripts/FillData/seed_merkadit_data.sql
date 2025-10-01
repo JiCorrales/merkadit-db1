@@ -435,15 +435,15 @@ CREATE TEMPORARY TABLE tmp_product_catalog (
 
 INSERT INTO tmp_product_catalog (tenant_seq, product_label, description, expires, shelf_days, basePrice)
 VALUES
-(1, 'Blend Amanecer', 'Cafe en grano tostado medio.', b'0', 0, 8.50),
-(1, 'Reserva Tarde', 'Cafe especial con notas a cacao.', b'0', 0, 9.80),
-(1, 'Cold Brew Matinal', 'Preparado frio embotellado, listo para servir.', b'1', 5, 6.90),
-(3, 'Canasta Verde', 'Selección semanal de hortalizas organicas.', b'1', 5, 18.50),
-(3, 'Mermelada de Mora', 'Mermelada artesanal sin aditivos.', b'1', 180, 6.40),
-(3, 'Miel de Altura', 'Miel cruda recolectada en montana.', b'0', 0, 7.80),
-(13, 'Pan de Masa Madre', 'Pan artesanal fermentado lentamente.', b'1', 3, 4.80),
-(13, 'Croissant de Miel', 'Croissant laminado con miel local.', b'1', 2, 3.60),
-(13, 'Baguette Integral', 'Baguette integral con semillas.', b'1', 2, 3.90);
+(1, 'Blend Amanecer', 'Cafe en grano tostado medio.', b'0', 0, 2500),
+(1, 'Reserva Tarde', 'Cafe especial con notas a cacao.', b'0', 0, 3200),
+(1, 'Cold Brew Matinal', 'Preparado frio embotellado, listo para servir.', b'1', 5, 2100),
+(3, 'Canasta Verde', 'Selección semanal de hortalizas organicas.', b'1', 5, 9500),
+(3, 'Mermelada de Mora', 'Mermelada artesanal sin aditivos.', b'1', 180, 3500),
+(3, 'Miel de Altura', 'Miel cruda recolectada en montana.', b'0', 0, 4200),
+(13, 'Pan de Masa Madre', 'Pan artesanal fermentado lentamente.', b'1', 3, 2600),
+(13, 'Croissant de Miel', 'Croissant laminado con miel local.', b'1', 2, 2200),
+(13, 'Baguette Integral', 'Baguette integral con semillas.', b'1', 2, 2400);
 
 DROP TEMPORARY TABLE IF EXISTS tmp_business_products;
 CREATE TEMPORARY TABLE tmp_business_products AS
